@@ -1,0 +1,5 @@
+[package]
+
+name = "rust-url-capi"
+version = "0.0.1"
+authors = ["Valentin Gosu <valentin.gosu@gmail.com>"]
