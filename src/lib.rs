@@ -29,7 +29,15 @@ use error_mapping::{ErrorCode};
 #[no_mangle]
 pub unsafe extern "C" fn rusturl_new(spec: *mut libc::c_char, len: size_t) -> rusturl_ptr {
   let slice = std::slice::from_raw_parts(spec as *const libc::c_uchar, len as usize);
-  let url = Box::new(Url::parse(str::from_utf8(slice).ok().unwrap()).ok().unwrap());
+  let url_spec = match str::from_utf8(slice) {
+    Ok(spec) => spec,
+    Err(_) => return 0 as rusturl_ptr
+  };
+  let url = match Url::parse(url_spec) {
+    Ok(url) => url,
+    Err(_) => return 0 as rusturl_ptr
+  };
+  let url = Box::new(url);
   std::boxed::into_raw(url) as rusturl_ptr
 }
 
