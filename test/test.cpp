@@ -32,6 +32,7 @@ int main() {
   TEST_GET(rusturl_get_path(url), "/path/some/file.txt");
   TEST_SET(rusturl_set_path(url, "hello/../else.txt", strlen("hello/../else.txt")), 0);
   TEST_GET(rusturl_get_path(url), "/else.txt");
+  TEST_GET(rusturl_resolve(url, "./bla/file.txt", strlen("./bla/file.txt")), "http://test.com/bla/file.txt");
   TEST_GET(rusturl_get_scheme(url), "http");
   TEST_SET(rusturl_set_username(url, "user", strlen("user")), 0);
   TEST_GET(rusturl_get_username(url), "user");

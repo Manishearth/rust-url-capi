@@ -256,3 +256,118 @@ pub unsafe extern "C" fn rusturl_set_fragment(urlptr: rusturl_ptr, fragment: *mu
   let mut wrapper = UrlUtilsWrapper{ url: url, parser: &UrlParser::new()};
   wrapper.set_fragment(fragment_).error_code()
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn rusturl_resolve(urlptr: rusturl_ptr, resolve: *mut libc::c_char, len: size_t) -> rust_cstring {
+  let url: &mut Url = mem::transmute(urlptr);
+
+    let slice = std::slice::from_raw_parts(resolve as *const libc::c_uchar, len as usize);
+
+  let resolve_ = match str::from_utf8(slice).ok() {
+    Some(p) => p,
+    None => return rust_cstring::null() // utf-8 failed
+  };
+
+  match UrlParser::new().base_url(&url).parse(resolve_).ok() {
+    Some(u) => rust_cstring::new(&u.serialize()),
+    None => return rust_cstring::null()
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rusturl_common_base_spec(urlptr1: rusturl_ptr, urlptr2: rusturl_ptr) -> rust_cstring {
+  let url1: &Url = mem::transmute(urlptr1);
+  let url2: &Url = mem::transmute(urlptr2);
+
+  if url1 == url2 {
+    return rust_cstring::new(&url1.serialize());
+  }
+
+  if url1.scheme != url2.scheme ||
+     url1.host() != url2.host() ||
+     url1.username() != url2.username() ||
+     url1.password() != url2.password() ||
+     url1.port() != url2.port() {
+    return rust_cstring::new(&"".to_string());
+  }
+
+  let data1 = match url1.relative_scheme_data() {
+    Some(data) => data,
+    None => return rust_cstring::new(&"".to_string())
+  };
+  let data2 = match url2.relative_scheme_data() {
+    Some(data) => data,
+    None => return rust_cstring::new(&"".to_string())
+  };
+
+  let min_path_len = std::cmp::min(data1.path.len(), data2.path.len());
+  let mut matches = min_path_len;
+  for i in range(0, min_path_len) {
+    if data1.path[i] != data2.path[i] {
+      matches = i;
+      break;
+    }
+  }
+
+  let mut url = url1.clone();
+  url.query = None;
+  url.fragment = None;
+  match url.relative_scheme_data_mut() {
+    Some(data) => {
+      data.path.truncate(matches);
+    }
+    None => return rust_cstring::new(&"".to_string())
+  };
+
+  rust_cstring::new(&url.serialize())
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rusturl_relative_spec(urlptr1: rusturl_ptr, urlptr2: rusturl_ptr) -> rust_cstring {
+  let url1: &Url = mem::transmute(urlptr1);
+  let url2: &Url = mem::transmute(urlptr2);
+
+  if url1 == url2 {
+    return rust_cstring::new(&"".to_string());
+  }
+
+  if url1.scheme != url2.scheme ||
+     url1.host() != url2.host() ||
+     url1.username() != url2.username() ||
+     url1.password() != url2.password() ||
+     url1.port() != url2.port() {
+    return rust_cstring::new(&url2.serialize());
+  }
+
+  let data1 = match url1.relative_scheme_data() {
+    Some(data) => data,
+    None => return rust_cstring::new(&url2.serialize())
+  };
+  let data2 = match url2.relative_scheme_data() {
+    Some(data) => data,
+    None => return rust_cstring::new(&url2.serialize())
+  };
+
+  // TODO: file:// on WIN?
+
+  let min_path_len = std::cmp::min(data1.path.len(), data2.path.len());
+  let mut matches = min_path_len;
+  for i in range(0, min_path_len) {
+    if data1.path[i] != data2.path[i] {
+      matches = i;
+      break;
+    }
+  }
+
+  let mut buffer: String = "".to_string();
+  for _ in range(matches, data1.path.len()) {
+    buffer = buffer + "../";
+  }
+  for i in range(matches, data2.path.len()) {
+    let buf = data2.path[i].to_string() + "/";
+    buffer = buffer + buf.as_slice();
+  }
+
+  rust_cstring::new(&buffer)
+}
+

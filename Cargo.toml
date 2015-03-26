@@ -4,10 +4,15 @@ name = "rust-url-capi"
 version = "0.0.1"
 authors = ["Valentin Gosu <valentin.gosu@gmail.com>"]
 
+[profile.dev]
+opt-level = 3
+debug = true
+rpath = true
+lto = true
+
 [lib]
 name = "rust-url-capi"
 crate-type = ["staticlib"]
 
 [dependencies.url]
-version = "0.2.23"
-git = "https://github.com/servo/rust-url.git"
+path = "../rust-url"

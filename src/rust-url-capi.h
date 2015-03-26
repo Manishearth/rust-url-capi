@@ -2,6 +2,10 @@
 #define __RUST_URL_CAPI
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct rusturl;
 typedef struct rusturl* rusturl_ptr;
 
@@ -42,5 +46,13 @@ int32_t rusturl_set_port(rusturl_ptr url, const char *port, size_t len);
 int32_t rusturl_set_path(rusturl_ptr url, const char *path, size_t len);
 int32_t rusturl_set_query(rusturl_ptr url, const char *path, size_t len);
 int32_t rusturl_set_fragment(rusturl_ptr url, const char *path, size_t len);
+
+rust_cstring rusturl_resolve(rusturl_ptr url, const char *relative, size_t len);
+rust_cstring rusturl_common_base_spec(rusturl_ptr url1, rusturl_ptr url2);
+rust_cstring rusturl_relative_spec(rusturl_ptr url1, rusturl_ptr url2);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __RUST_URL_CAPI
