@@ -4,7 +4,7 @@ use libc::{c_void, c_char, size_t};
 extern crate std;
 use std::boxed::*;
 use std::ffi::CString;
-use core::mem;
+use std::mem;
 
 #[repr(C)]
 pub struct rust_cstring  {

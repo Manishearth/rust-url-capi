@@ -1,6 +1,6 @@
 [package]
 
-name = "rust-url-capi"
+name = "rust_url_capi"
 version = "0.0.1"
 authors = ["Valentin Gosu <valentin.gosu@gmail.com>"]
 
@@ -11,7 +11,7 @@ rpath = true
 lto = true
 
 [lib]
-name = "rust-url-capi"
+name = "rust_url_capi"
 crate-type = ["staticlib"]
 
 [dependencies.url]

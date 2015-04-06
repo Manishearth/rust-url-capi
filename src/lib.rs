@@ -1,5 +1,4 @@
 #![feature(libc)]
-#![feature(core)]
 
 // warning: use of unstable library feature 'alloc': may be renamed
 #![feature(alloc)]
@@ -10,10 +9,10 @@ use url::{ Url, ParseError, UrlParser};
 extern crate libc;
 use libc::{c_void, c_char, size_t};
 
-extern crate core;
-use core::mem;
 
+use std::mem;
 use std::str;
+use std::borrow::Borrow;
 
 use url::urlutils::{UrlUtils, UrlUtilsWrapper};
 
@@ -302,7 +301,7 @@ pub unsafe extern "C" fn rusturl_common_base_spec(urlptr1: rusturl_ptr, urlptr2:
 
   let min_path_len = std::cmp::min(data1.path.len(), data2.path.len());
   let mut matches = min_path_len;
-  for i in range(0, min_path_len) {
+  for i in 0..min_path_len {
     if data1.path[i] != data2.path[i] {
       matches = i;
       break;
@@ -352,7 +351,7 @@ pub unsafe extern "C" fn rusturl_relative_spec(urlptr1: rusturl_ptr, urlptr2: ru
 
   let min_path_len = std::cmp::min(data1.path.len(), data2.path.len());
   let mut matches = min_path_len;
-  for i in range(0, min_path_len) {
+  for i in 0..min_path_len {
     if data1.path[i] != data2.path[i] {
       matches = i;
       break;
@@ -360,12 +359,12 @@ pub unsafe extern "C" fn rusturl_relative_spec(urlptr1: rusturl_ptr, urlptr2: ru
   }
 
   let mut buffer: String = "".to_string();
-  for _ in range(matches, data1.path.len()) {
+  for _ in matches..data1.path.len() {
     buffer = buffer + "../";
   }
-  for i in range(matches, data2.path.len()) {
+  for i in matches..data2.path.len() {
     let buf = data2.path[i].to_string() + "/";
-    buffer = buffer + buf.as_slice();
+    buffer = buffer + buf.borrow();
   }
 
   rust_cstring::new(&buffer)
