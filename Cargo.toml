@@ -15,4 +15,8 @@ name = "rust_url_capi"
 crate-type = ["staticlib"]
 
 [dependencies.url]
-path = "../rust-url"
+git = "https://github.com/valenting/rust-url"
+branch = "oxidation"
+#path = "../rust-url"
+features = ["query_encoding"]
+

@@ -43,3 +43,20 @@ impl ErrorCode for ParseError {
     }
   }
 }
+
+pub enum NSError {
+  OK,
+  InvalidArg,
+  Failure,
+}
+
+impl ErrorCode for NSError {
+  #[allow(overflowing_literals)]
+  fn error_code(&self) -> i32 {
+    match *self {
+      NSError::OK => 0,
+      NSError::InvalidArg => 0x80070057,
+      NSError::Failure => 0x80004005
+    }
+  }
+}
