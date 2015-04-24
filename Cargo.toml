@@ -18,5 +18,4 @@ crate-type = ["staticlib"]
 git = "https://github.com/valenting/rust-url"
 branch = "oxidation"
 #path = "../rust-url"
-features = ["query_encoding"]
 
