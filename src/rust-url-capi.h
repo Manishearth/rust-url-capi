@@ -9,24 +9,18 @@ extern "C" {
 struct rusturl;
 typedef struct rusturl* rusturl_ptr;
 
-struct __attribute__((packed))  string_container {
-  void * container;
-  int32_t (*fn_set_size)(void *, size_t);
-  char * (*fn_get_buffer)(void *);
-};
-
 rusturl_ptr rusturl_new(const char *spec, size_t src_len);
 void rusturl_free(rusturl_ptr url);
 
-int32_t rusturl_get_spec(rusturl_ptr url, struct string_container*);
-int32_t rusturl_get_scheme(rusturl_ptr url, struct string_container*);
-int32_t rusturl_get_username(rusturl_ptr url, struct string_container*);
-int32_t rusturl_get_password(rusturl_ptr url, struct string_container*);
-int32_t rusturl_get_host(rusturl_ptr url, struct string_container*);
+int32_t rusturl_get_spec(rusturl_ptr url, void*);
+int32_t rusturl_get_scheme(rusturl_ptr url, void*);
+int32_t rusturl_get_username(rusturl_ptr url, void*);
+int32_t rusturl_get_password(rusturl_ptr url, void*);
+int32_t rusturl_get_host(rusturl_ptr url, void*);
 int32_t rusturl_get_port(rusturl_ptr url); // returns port or -1
-int32_t rusturl_get_path(rusturl_ptr url, struct string_container*);
-int32_t rusturl_get_query(rusturl_ptr url, struct string_container*);
-int32_t rusturl_get_fragment(rusturl_ptr url, struct string_container*);
+int32_t rusturl_get_path(rusturl_ptr url, void*);
+int32_t rusturl_get_query(rusturl_ptr url, void*);
+int32_t rusturl_get_fragment(rusturl_ptr url, void*);
 int32_t rusturl_has_fragment(rusturl_ptr url); // 1 true, 0 false, < 0 error
 
 int32_t rusturl_set_scheme(rusturl_ptr url, const char *scheme, size_t len);
@@ -40,9 +34,9 @@ int32_t rusturl_set_path(rusturl_ptr url, const char *path, size_t len);
 int32_t rusturl_set_query(rusturl_ptr url, const char *path, size_t len);
 int32_t rusturl_set_fragment(rusturl_ptr url, const char *path, size_t len);
 
-int32_t rusturl_resolve(rusturl_ptr url, const char *relative, size_t len, struct string_container*);
-int32_t rusturl_common_base_spec(rusturl_ptr url1, rusturl_ptr url2, struct string_container*);
-int32_t rusturl_relative_spec(rusturl_ptr url1, rusturl_ptr url2, struct string_container*);
+int32_t rusturl_resolve(rusturl_ptr url, const char *relative, size_t len, void*);
+int32_t rusturl_common_base_spec(rusturl_ptr url1, rusturl_ptr url2, void*);
+int32_t rusturl_relative_spec(rusturl_ptr url1, rusturl_ptr url2, void*);
 
 #ifdef __cplusplus
 }

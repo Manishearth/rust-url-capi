@@ -54,7 +54,6 @@ fn mapper(scheme: &str) -> SchemeType {
 
 fn parser<'a>() -> UrlParser<'a> {
   fn silent_handler(_reason: ParseError) -> ParseResult<()> { Ok(()) }
-  let enc = EncodingOverride::lookup("ascii".as_bytes());
   UrlParser {
     base_url: None,
     query_encoding_override: EncodingOverride::utf8(),
@@ -90,56 +89,56 @@ pub unsafe extern "C" fn rusturl_free(urlptr: rusturl_ptr) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_spec(urlptr: rusturl_ptr, cont: *mut string_container) -> i32 {
+pub unsafe extern "C" fn rusturl_get_spec(urlptr: rusturl_ptr, cont: *mut libc::c_void) -> i32 {
   if urlptr.is_null() {
     return NSError::InvalidArg.error_code();
   }
   let url: &Url = mem::transmute(urlptr);
-  cont.copy_String_to(&url.serialize())
+  cont.assign(&url.serialize())
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_scheme(urlptr: rusturl_ptr, cont: *mut string_container) -> i32 {
+pub unsafe extern "C" fn rusturl_get_scheme(urlptr: rusturl_ptr, cont: *mut libc::c_void) -> i32 {
   if urlptr.is_null() {
     return NSError::InvalidArg.error_code();
   }
   let url: &Url = mem::transmute(urlptr);
-  cont.copy_String_to(&url.scheme)
+  cont.assign(&url.scheme)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_username(urlptr: rusturl_ptr, cont: *mut string_container) -> i32 {
+pub unsafe extern "C" fn rusturl_get_username(urlptr: rusturl_ptr, cont: *mut libc::c_void) -> i32 {
   if urlptr.is_null() {
     return NSError::InvalidArg.error_code();
   }
   let url: &Url = mem::transmute(urlptr);
   match url.username() {
-    Some(p) => cont.copy_String_to(&p.to_string()),
+    Some(p) => cont.assign(&p.to_string()),
     None => cont.set_size(0)
   }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_password(urlptr: rusturl_ptr, cont: *mut string_container) -> i32 {
+pub unsafe extern "C" fn rusturl_get_password(urlptr: rusturl_ptr, cont: *mut libc::c_void) -> i32 {
   if urlptr.is_null() {
     return NSError::InvalidArg.error_code();
   }
   let url: &Url = mem::transmute(urlptr);
   match url.password() {
-    Some(p) => cont.copy_String_to(&p.to_string()),
+    Some(p) => cont.assign(&p.to_string()),
     None => cont.set_size(0)
   }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_host(urlptr: rusturl_ptr, cont: *mut string_container) -> i32 {
+pub unsafe extern "C" fn rusturl_get_host(urlptr: rusturl_ptr, cont: *mut libc::c_void) -> i32 {
   if urlptr.is_null() {
     return NSError::InvalidArg.error_code();
   }
   let url: &Url = mem::transmute(urlptr);
 
   match url.host() {
-    Some(h) => cont.copy_String_to(&h.serialize()),
+    Some(h) => cont.assign(&h.serialize()),
     None => cont.set_size(0)
   }
 }
@@ -158,38 +157,38 @@ pub unsafe extern "C" fn rusturl_get_port(urlptr: rusturl_ptr) -> i32 {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_path(urlptr: rusturl_ptr, cont: *mut string_container) -> i32 {
+pub unsafe extern "C" fn rusturl_get_path(urlptr: rusturl_ptr, cont: *mut libc::c_void) -> i32 {
   if urlptr.is_null() {
     return NSError::InvalidArg.error_code();
   }
   let url: &Url = mem::transmute(urlptr);
   match url.serialize_path() {
-    Some(s) => cont.copy_String_to(&s),
+    Some(s) => cont.assign(&s),
     None => cont.set_size(0)
   }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_query(urlptr: rusturl_ptr, cont: *mut string_container) -> i32 {
+pub unsafe extern "C" fn rusturl_get_query(urlptr: rusturl_ptr, cont: *mut libc::c_void) -> i32 {
   if urlptr.is_null() {
     return NSError::InvalidArg.error_code();
   }
   let url: &Url = mem::transmute(urlptr);
-  match url.lossy_percent_decode_query() {
-    Some(s) => cont.copy_String_to(&s),
+  match url.query {
+    Some(ref s) => cont.assign(&s),
     None => cont.set_size(0)
   }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_fragment(urlptr: rusturl_ptr, cont: *mut string_container) -> i32 {
+pub unsafe extern "C" fn rusturl_get_fragment(urlptr: rusturl_ptr, cont: *mut libc::c_void) -> i32 {
   if urlptr.is_null() {
     return NSError::InvalidArg.error_code();
   }
   let url: &Url = mem::transmute(urlptr);
 
   match url.fragment {
-    Some(ref fragment) => cont.copy_String_to(&fragment),
+    Some(ref fragment) => cont.assign(&fragment),
     None => cont.set_size(0)
   }
 }
@@ -392,7 +391,7 @@ pub unsafe extern "C" fn rusturl_set_fragment(urlptr: rusturl_ptr, fragment: *mu
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_resolve(urlptr: rusturl_ptr, resolve: *mut libc::c_char, len: size_t, cont: *mut string_container) -> i32 {
+pub unsafe extern "C" fn rusturl_resolve(urlptr: rusturl_ptr, resolve: *mut libc::c_char, len: size_t, cont: *mut libc::c_void) -> i32 {
   if urlptr.is_null() {
     return NSError::InvalidArg.error_code();
   }
@@ -406,13 +405,13 @@ pub unsafe extern "C" fn rusturl_resolve(urlptr: rusturl_ptr, resolve: *mut libc
   };
 
   match parser().base_url(&url).parse(resolve_).ok() {
-    Some(u) => cont.copy_String_to(&u.serialize()),
+    Some(u) => cont.assign(&u.serialize()),
     None => cont.set_size(0)
   }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_common_base_spec(urlptr1: rusturl_ptr, urlptr2: rusturl_ptr, cont: *mut string_container) -> i32 {
+pub unsafe extern "C" fn rusturl_common_base_spec(urlptr1: rusturl_ptr, urlptr2: rusturl_ptr, cont: *mut libc::c_void) -> i32 {
   if urlptr1.is_null() || urlptr2.is_null() {
     return NSError::InvalidArg.error_code();
   }
@@ -420,7 +419,7 @@ pub unsafe extern "C" fn rusturl_common_base_spec(urlptr1: rusturl_ptr, urlptr2:
   let url2: &Url = mem::transmute(urlptr2);
 
   if url1 == url2 {
-    return cont.copy_String_to(&url1.serialize());
+    return cont.assign(&url1.serialize());
   }
 
   if url1.scheme != url2.scheme ||
@@ -459,11 +458,11 @@ pub unsafe extern "C" fn rusturl_common_base_spec(urlptr1: rusturl_ptr, urlptr2:
     None => return cont.set_size(0)
   };
 
-  cont.copy_String_to(&url.serialize())
+  cont.assign(&url.serialize())
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_relative_spec(urlptr1: rusturl_ptr, urlptr2: rusturl_ptr, cont: *mut string_container) -> i32 {
+pub unsafe extern "C" fn rusturl_relative_spec(urlptr1: rusturl_ptr, urlptr2: rusturl_ptr, cont: *mut libc::c_void) -> i32 {
   if urlptr1.is_null() || urlptr2.is_null() {
     return NSError::InvalidArg.error_code();
   }
@@ -479,16 +478,16 @@ pub unsafe extern "C" fn rusturl_relative_spec(urlptr1: rusturl_ptr, urlptr2: ru
      url1.username() != url2.username() ||
      url1.password() != url2.password() ||
      url1.port() != url2.port() {
-    return cont.copy_String_to(&url2.serialize());
+    return cont.assign(&url2.serialize());
   }
 
   let data1 = match url1.relative_scheme_data() {
     Some(data) => data,
-    None => return cont.copy_String_to(&url2.serialize())
+    None => return cont.assign(&url2.serialize())
   };
   let data2 = match url2.relative_scheme_data() {
     Some(data) => data,
-    None => return cont.copy_String_to(&url2.serialize())
+    None => return cont.assign(&url2.serialize())
   };
 
   // TODO: file:// on WIN?
@@ -511,6 +510,6 @@ pub unsafe extern "C" fn rusturl_relative_spec(urlptr1: rusturl_ptr, urlptr2: ru
     buffer = buffer + buf.borrow();
   }
 
-  return cont.copy_String_to(&buffer);
+  return cont.assign(&buffer);
 }
 

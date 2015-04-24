@@ -50,16 +50,13 @@ private:
   char * mBuffer;
 };
 
-extern "C" int32_t fn_set_size(void *, size_t);
-extern "C" char * fn_get_buffer(void *);
-
-int32_t fn_set_size(void * container, size_t size)
+extern "C" int32_t c_fn_set_size(void * container, size_t size)
 {
   ((StringContainer *) container)->SetSize(size);
   return 0;
 }
 
-char * fn_get_buffer(void * container)
+extern "C" char * c_fn_get_buffer(void * container)
 {
   return ((StringContainer *) container)->GetBuffer();
 }
@@ -80,54 +77,49 @@ int main() {
   assert(url); // Check we have a URL
 
   StringContainer container;
-  string_container c = {
-    .container = &container,
-    .fn_set_size = fn_set_size,
-    .fn_get_buffer = fn_get_buffer
-  };
 
-  TEST_CALL(rusturl_get_spec(url, &c), 0);
+  TEST_CALL(rusturl_get_spec(url, &container), 0);
   container.CheckEquals("http://example.com/path/some/file.txt");
   TEST_CALL(rusturl_set_host(url, "test.com", strlen("test.com")), 0);
-  TEST_CALL(rusturl_get_host(url, &c), 0);
+  TEST_CALL(rusturl_get_host(url, &container), 0);
   container.CheckEquals("test.com");
-  TEST_CALL(rusturl_get_path(url, &c), 0);
+  TEST_CALL(rusturl_get_path(url, &container), 0);
   container.CheckEquals("/path/some/file.txt");
   TEST_CALL(rusturl_set_path(url, "hello/../else.txt", strlen("hello/../else.txt")), 0);
-  TEST_CALL(rusturl_get_path(url, &c), 0);
+  TEST_CALL(rusturl_get_path(url, &container), 0);
   container.CheckEquals("/else.txt");
-  TEST_CALL(rusturl_resolve(url, "./bla/file.txt", strlen("./bla/file.txt"), &c), 0);
+  TEST_CALL(rusturl_resolve(url, "./bla/file.txt", strlen("./bla/file.txt"), &container), 0);
   container.CheckEquals("http://test.com/bla/file.txt");
-  TEST_CALL(rusturl_get_scheme(url, &c), 0);
+  TEST_CALL(rusturl_get_scheme(url, &container), 0);
   container.CheckEquals("http");
   TEST_CALL(rusturl_set_username(url, "user", strlen("user")), 0);
-  TEST_CALL(rusturl_get_username(url, &c), 0);
+  TEST_CALL(rusturl_get_username(url, &container), 0);
   container.CheckEquals("user");
-  TEST_CALL(rusturl_get_spec(url, &c), 0);
+  TEST_CALL(rusturl_get_spec(url, &container), 0);
   container.CheckEquals("http://user@test.com/else.txt");
   TEST_CALL(rusturl_set_password(url, "pass", strlen("pass")), 0);
-  TEST_CALL(rusturl_get_password(url, &c), 0);
+  TEST_CALL(rusturl_get_password(url, &container), 0);
   container.CheckEquals("pass");
-  TEST_CALL(rusturl_get_spec(url, &c), 0);
+  TEST_CALL(rusturl_get_spec(url, &container), 0);
   container.CheckEquals("http://user:pass@test.com/else.txt");
   TEST_CALL(rusturl_set_username(url, "", strlen("")), 0);
   TEST_CALL(rusturl_set_password(url, "", strlen("")), 0);
-  TEST_CALL(rusturl_get_spec(url, &c), 0);
-  container.CheckEquals("http://:@test.com/else.txt"); // XXX should rust-url remove unneeded :@ ?
+  TEST_CALL(rusturl_get_spec(url, &container), 0);
+  container.CheckEquals("http://test.com/else.txt");
   TEST_CALL(rusturl_set_host_and_port(url, "example.org:1234", strlen("example.org:1234")), 0);
-  TEST_CALL(rusturl_get_host(url, &c), 0);
+  TEST_CALL(rusturl_get_host(url, &container), 0);
   container.CheckEquals("example.org");
   assert(rusturl_get_port(url) == 1234);
   TEST_CALL(rusturl_set_port(url, "9090", strlen("9090")), 0);
   assert(rusturl_get_port(url) == 9090);
   TEST_CALL(rusturl_set_query(url, "x=1", strlen("x=1")), 0);
-  TEST_CALL(rusturl_get_query(url, &c), 0);
+  TEST_CALL(rusturl_get_query(url, &container), 0);
   container.CheckEquals("x=1");
   TEST_CALL(rusturl_set_fragment(url, "fragment", strlen("fragment")), 0);
-  TEST_CALL(rusturl_get_fragment(url, &c), 0);
+  TEST_CALL(rusturl_get_fragment(url, &container), 0);
   container.CheckEquals("fragment");
-  TEST_CALL(rusturl_get_spec(url, &c), 0);
-  container.CheckEquals("http://:@example.org:9090/else.txt?x=1#fragment"); // XXX should rust-url remove unneeded :@ ?
+  TEST_CALL(rusturl_get_spec(url, &container), 0);
+  container.CheckEquals("http://example.org:9090/else.txt?x=1#fragment");
 
   // Free the URL
   rusturl_free(url);
@@ -139,7 +131,7 @@ int main() {
   assert(rusturl_has_fragment(url) == 1);
   TEST_CALL(rusturl_set_fragment(url, "", 0), 0);
   assert(rusturl_has_fragment(url) == 0);
-  TEST_CALL(rusturl_get_spec(url, &c), 0);
+  TEST_CALL(rusturl_get_spec(url, &container), 0);
   container.CheckEquals("http://example.com/");
 
   rusturl_free(url);

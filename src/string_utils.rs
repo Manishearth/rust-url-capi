@@ -6,61 +6,45 @@ use std::ptr;
 
 use error_mapping::*;
 
-
-#[repr(C)]
-pub struct string_container  {
-  pub container: *mut libc::c_void,
-  pub fn_set_size: Option<extern "C" fn(user: *mut libc::c_void, size: size_t)>,
-  pub fn_get_buffer: Option<extern "C" fn(user: *mut c_void) -> *mut libc::c_char>,
+extern "C" {
+  fn c_fn_set_size(user: *mut libc::c_void, size: size_t) -> i32;
+  fn c_fn_get_buffer(user: *mut c_void) -> *mut libc::c_char;
 }
 
 pub trait StringContainer {
   fn set_size(&self, size_t) -> i32;
   fn get_buffer(&self) -> *mut libc::c_char;
-  fn copy_String_to(&self, content: &String) -> i32;
+  fn assign(&self, content: &String) -> i32;
 }
 
-impl StringContainer for *mut string_container {
+impl StringContainer for *mut libc::c_void {
   fn set_size(&self, size: size_t) -> i32 {
     if (*self).is_null() {
       return NSError::InvalidArg.error_code();
     }
     unsafe {
-      match (**self).fn_set_size {
-        Some(f) => f((**self).container, size),
-        None => return NSError::InvalidArg.error_code()
-      }
+      c_fn_set_size(*self, size as u64);
+    }
+
     return NSError::OK.error_code();
-    }
   }
-
   fn get_buffer(&self) -> *mut libc::c_char {
+    if (*self).is_null() {
+      return 0 as *mut libc::c_char;
+    }
     unsafe {
-      match (**self).fn_get_buffer {
-        Some(f) => return f((**self).container),
-        None => return 0 as *mut libc::c_char
-      }
+      c_fn_get_buffer(*self)
     }
   }
-
-  fn copy_String_to(&self, content: &String) -> i32 {
+  fn assign(&self, content: &String) -> i32 {
     if (*self).is_null() {
       return NSError::InvalidArg.error_code();
     }
 
     unsafe {
       let slice = content.as_bytes();
-
-      match (**self).fn_set_size {
-        Some(f) => f((**self).container, slice.len() as u64),
-        None => return NSError::InvalidArg.error_code()
-      }
-
-      let buf = match (**self).fn_get_buffer {
-        Some(f) => f((**self).container),
-        None => 0 as *mut libc::c_char
-      };
-
+      c_fn_set_size(*self, slice.len() as u64);
+      let buf = c_fn_get_buffer(*self);
       if buf.is_null() {
         return NSError::Failure.error_code();
       }
