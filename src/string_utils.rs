@@ -23,7 +23,7 @@ impl StringContainer for *mut libc::c_void {
       return NSError::InvalidArg.error_code();
     }
     unsafe {
-      c_fn_set_size(*self, size as u64);
+      c_fn_set_size(*self, size as usize);
     }
 
     return NSError::OK.error_code();
@@ -43,7 +43,7 @@ impl StringContainer for *mut libc::c_void {
 
     unsafe {
       let slice = content.as_bytes();
-      c_fn_set_size(*self, slice.len() as u64);
+      c_fn_set_size(*self, slice.len() as usize);
       let buf = c_fn_get_buffer(*self);
       if buf.is_null() {
         return NSError::Failure.error_code();

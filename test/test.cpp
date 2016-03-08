@@ -121,6 +121,51 @@ int main() {
   TEST_CALL(rusturl_get_spec(url, &container), 0);
   container.CheckEquals("http://example.org:9090/else.txt?x=1#fragment");
 
+  TEST_CALL(rusturl_get_part(url, Scheme, &container), 0);
+  container.CheckEquals("http");
+
+  TEST_CALL(rusturl_get_part(url, Hostname, &container), 0);
+  container.CheckEquals("example.org");
+
+  TEST_CALL(rusturl_get_part(url, Port, &container), 0);
+  container.CheckEquals("9090");
+
+  TEST_CALL(rusturl_get_part(url, Path, &container), 0);
+  container.CheckEquals("/else.txt");
+
+  TEST_CALL(rusturl_get_part(url, Query, &container), 0);
+  container.CheckEquals("x=1");
+
+  TEST_CALL(rusturl_get_part(url, Hash, &container), 0);
+  container.CheckEquals("fragment");
+
+  TEST_CALL(rusturl_get_part(url, Scheme | User | Password | Hostname | Port | Path | Query | Hash, &container), 0);
+  container.CheckEquals("http://example.org:9090/else.txt?x=1#fragment");
+
+  TEST_CALL(rusturl_get_part(url,Hostname | Port, &container), 0);
+  container.CheckEquals("example.org:9090");
+
+  TEST_CALL(rusturl_set_username(url, "user", strlen("user")), 0);
+  TEST_CALL(rusturl_set_password(url, "pass", strlen("pass")), 0);
+
+  TEST_CALL(rusturl_get_part(url, Scheme | User | Password | Hostname | Port | Path | Query | Hash, &container), 0);
+  container.CheckEquals("http://user:pass@example.org:9090/else.txt?x=1#fragment");
+
+  TEST_CALL(rusturl_get_part(url, User | Password, &container), 0);
+  container.CheckEquals("user:pass");
+
+  TEST_CALL(rusturl_get_part(url, User | Password | Hostname | Port, &container), 0);
+  container.CheckEquals("user:pass@example.org:9090");
+
+  TEST_CALL(rusturl_get_part(url, Scheme | User | Password | Hostname | Port, &container), 0);
+  container.CheckEquals("http://user:pass@example.org:9090");
+
+  TEST_CALL(rusturl_get_part(url, Scheme | Hostname | Port, &container), 0);
+  container.CheckEquals("http://example.org:9090");
+
+  TEST_CALL(rusturl_get_part(url, Scheme| User | Hostname | Port, &container), 0);
+  container.CheckEquals("http://user@example.org:9090");
+
   // Free the URL
   rusturl_free(url);
 

@@ -1,8 +1,3 @@
-#![feature(libc)]
-
-// warning: use of unstable library feature 'alloc': may be renamed
-#![feature(alloc)]
-
 extern crate url;
 use url::{ Url, ParseError, UrlParser, SchemeType, ParseResult};
 
@@ -18,6 +13,18 @@ use url::urlutils::{UrlUtils, UrlUtilsWrapper};
 
 use url::EncodingOverride;
 
+#[repr(C)]
+enum UrlSegmentFlags
+{
+    Scheme = 1 << 0,
+    User = 1 << 1,
+    Password = 1 << 2,
+    Hostname = 1 << 3,
+    Port = 1 << 4,
+    Path = 1 << 5,
+    Query = 1 << 6,
+    Hash = 1 << 7
+}
 
 #[allow(non_camel_case_types)]
 pub type rusturl_ptr = *const libc::c_void;
@@ -76,7 +83,7 @@ pub unsafe extern "C" fn rusturl_new(spec: *mut libc::c_char, len: size_t) -> ru
     Err(_) => return 0 as rusturl_ptr
   };
   let url = Box::new(url);
-  std::boxed::into_raw(url) as rusturl_ptr
+  mem::transmute(url)
 }
 
 #[no_mangle]
@@ -86,6 +93,86 @@ pub unsafe extern "C" fn rusturl_free(urlptr: rusturl_ptr) {
   }
   let url: Box<Url> = Box::from_raw(urlptr as *mut url::Url);
   drop(url);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rusturl_get_part(urlptr: rusturl_ptr, flags: u32, cont: *mut libc::c_void) -> i32 {
+  if urlptr.is_null() {
+    return NSError::InvalidArg.error_code();
+  }
+  let url: &Url = mem::transmute(urlptr);
+
+  let mut buffer: String = "".to_string();
+
+  if flags & UrlSegmentFlags::Scheme as u32 != 0 {
+    buffer.push_str(&url.scheme);
+    if flags & !(UrlSegmentFlags::Scheme as u32) != 0 {
+      buffer.push_str("://");
+    }
+  }
+
+  if flags & (UrlSegmentFlags::User as u32) != 0 {
+    if let Some(user) = url.username() {
+      buffer.push_str(&user);
+    }
+  }
+
+  if flags & (UrlSegmentFlags::Password as u32) != 0 {
+    if let Some(password) = url.password() {
+      buffer.push_str(":");
+      buffer.push_str(&password);
+    }
+  }
+
+  if flags & (UrlSegmentFlags::Hostname as u32) != 0 {
+    if flags & (UrlSegmentFlags::User as u32) != 0 {
+      if let Some(user) = url.username() {
+        if user.len() != 0 {
+          buffer.push_str("@");
+        }
+      }
+    }
+
+    if let Some(hostname) = url.host() {
+      buffer.push_str(&hostname.serialize());
+    }
+  }
+
+  if flags & (UrlSegmentFlags::Port as u32) != 0 {
+    if let Some(port) = url.port() {
+      if flags & (UrlSegmentFlags::Hostname as u32) != 0 {
+        buffer.push_str(":");
+      }
+
+      buffer.push_str(&port.to_string());
+    }
+  }
+
+  if flags & (UrlSegmentFlags::Path as u32) != 0 {
+    if let Some(path) = url.serialize_path() {
+      buffer.push_str(&path);
+    }
+  }
+
+  if flags & (UrlSegmentFlags::Query as u32) != 0 {
+    if flags & !(UrlSegmentFlags::Query as u32) != 0 {
+      buffer.push_str("?");
+    }
+    if let Some(ref query) = url.query {
+      buffer.push_str(&query);
+    }
+  }
+
+  if flags & (UrlSegmentFlags::Hash as u32) != 0 {
+    if flags & !(UrlSegmentFlags::Hash as u32) != 0 {
+      buffer.push_str("#");
+    }
+    if let Some(ref fragment) = url.fragment {
+      buffer.push_str(&fragment);
+    }
+  }
+
+  cont.assign(&buffer)
 }
 
 #[no_mangle]

@@ -1,7 +1,7 @@
 [package]
 
 name = "rust_url_capi"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Valentin Gosu <valentin.gosu@gmail.com>"]
 
 [profile.dev]
@@ -15,7 +15,7 @@ name = "rust_url_capi"
 crate-type = ["staticlib"]
 
 [dependencies.url]
-git = "https://github.com/valenting/rust-url"
-branch = "oxidation"
-#path = "../rust-url"
+path = "/home/icecold/workspace/rust-url"
 
+[dependencies]
+libc = "0.2"

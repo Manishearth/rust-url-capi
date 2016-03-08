@@ -6,11 +6,25 @@
 extern "C" {
 #endif
 
+enum UrlSegmentFlags
+{
+    Scheme = 1 << 0,
+    User = 1 << 1,
+    Password = 1 << 2,
+    Hostname = 1 << 3,
+    Port = 1 << 4,
+    Path = 1 << 5,
+    Query = 1 << 6,
+    Hash = 1 << 7
+};
+
 struct rusturl;
 typedef struct rusturl* rusturl_ptr;
 
 rusturl_ptr rusturl_new(const char *spec, size_t src_len);
 void rusturl_free(rusturl_ptr url);
+
+int32_t rusturl_get_part(rusturl_ptr url, int32_t, void*);
 
 int32_t rusturl_get_spec(rusturl_ptr url, void*);
 int32_t rusturl_get_scheme(rusturl_ptr url, void*);
