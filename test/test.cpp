@@ -64,7 +64,7 @@ extern "C" char * c_fn_get_buffer(void * container)
 #define TEST_CALL(func, expected)                  \
 {                                                  \
   int32_t code = func;                             \
-  printf("%s -> code %d\n", #func, code);          \
+  printf("%s -> code %d (expecting %d)\n", #func, code, expected);          \
   assert(code == expected);                        \
   printf("-> OK\n");                               \
 }                                                  \
@@ -109,9 +109,11 @@ int main() {
   TEST_CALL(rusturl_set_host_and_port(url, "example.org:1234", strlen("example.org:1234")), 0);
   TEST_CALL(rusturl_get_host(url, &container), 0);
   container.CheckEquals("example.org");
-  assert(rusturl_get_port(url) == 1234);
+  TEST_CALL(rusturl_get_port(url), 1234);
+  TEST_CALL(rusturl_get_spec(url, &container), 0);
+  container.CheckEquals("http://example.org:1234/else.txt");
   TEST_CALL(rusturl_set_port(url, "9090", strlen("9090")), 0);
-  assert(rusturl_get_port(url) == 9090);
+  TEST_CALL(rusturl_get_port(url), 9090);
   TEST_CALL(rusturl_set_query(url, "x=1", strlen("x=1")), 0);
   TEST_CALL(rusturl_get_query(url, &container), 0);
   container.CheckEquals("x=1");
@@ -121,50 +123,44 @@ int main() {
   TEST_CALL(rusturl_get_spec(url, &container), 0);
   container.CheckEquals("http://example.org:9090/else.txt?x=1#fragment");
 
-  TEST_CALL(rusturl_get_part(url, Scheme, &container), 0);
+  TEST_CALL(rusturl_get_part(url, PositionBeforeScheme, PositionAfterScheme, &container), 0);
   container.CheckEquals("http");
 
-  TEST_CALL(rusturl_get_part(url, Hostname, &container), 0);
+  TEST_CALL(rusturl_get_part(url, PositionBeforeHost, PositionAfterHost, &container), 0);
   container.CheckEquals("example.org");
 
-  TEST_CALL(rusturl_get_part(url, Port, &container), 0);
+  TEST_CALL(rusturl_get_part(url, PositionBeforePort, PositionAfterPort, &container), 0);
   container.CheckEquals("9090");
 
-  TEST_CALL(rusturl_get_part(url, Path, &container), 0);
+  TEST_CALL(rusturl_get_part(url, PositionBeforePath, PositionAfterPath, &container), 0);
   container.CheckEquals("/else.txt");
 
-  TEST_CALL(rusturl_get_part(url, Query, &container), 0);
+  TEST_CALL(rusturl_get_part(url, PositionBeforeQuery, PositionAfterQuery, &container), 0);
   container.CheckEquals("x=1");
 
-  TEST_CALL(rusturl_get_part(url, Hash, &container), 0);
+  TEST_CALL(rusturl_get_part(url, PositionBeforeFragment, PositionAfterFragment, &container), 0);
   container.CheckEquals("fragment");
 
-  TEST_CALL(rusturl_get_part(url, Scheme | User | Password | Hostname | Port | Path | Query | Hash, &container), 0);
+  TEST_CALL(rusturl_get_part(url, PositionBeforeScheme, PositionAfterFragment, &container), 0);
   container.CheckEquals("http://example.org:9090/else.txt?x=1#fragment");
 
-  TEST_CALL(rusturl_get_part(url,Hostname | Port, &container), 0);
+  TEST_CALL(rusturl_get_part(url, PositionBeforeHost, PositionAfterPort, &container), 0);
   container.CheckEquals("example.org:9090");
 
   TEST_CALL(rusturl_set_username(url, "user", strlen("user")), 0);
   TEST_CALL(rusturl_set_password(url, "pass", strlen("pass")), 0);
 
-  TEST_CALL(rusturl_get_part(url, Scheme | User | Password | Hostname | Port | Path | Query | Hash, &container), 0);
+  TEST_CALL(rusturl_get_part(url, PositionBeforeScheme, PositionAfterFragment, &container), 0);
   container.CheckEquals("http://user:pass@example.org:9090/else.txt?x=1#fragment");
 
-  TEST_CALL(rusturl_get_part(url, User | Password, &container), 0);
+  TEST_CALL(rusturl_get_part(url, PositionBeforeUsername, PositionAfterPassword, &container), 0);
   container.CheckEquals("user:pass");
 
-  TEST_CALL(rusturl_get_part(url, User | Password | Hostname | Port, &container), 0);
+  TEST_CALL(rusturl_get_part(url, PositionBeforeUsername, PositionAfterPort, &container), 0);
   container.CheckEquals("user:pass@example.org:9090");
 
-  TEST_CALL(rusturl_get_part(url, Scheme | User | Password | Hostname | Port, &container), 0);
+  TEST_CALL(rusturl_get_part(url, PositionBeforeScheme, PositionAfterPort, &container), 0);
   container.CheckEquals("http://user:pass@example.org:9090");
-
-  TEST_CALL(rusturl_get_part(url, Scheme | Hostname | Port, &container), 0);
-  container.CheckEquals("http://example.org:9090");
-
-  TEST_CALL(rusturl_get_part(url, Scheme| User | Hostname | Port, &container), 0);
-  container.CheckEquals("http://user@example.org:9090");
 
   // Free the URL
   rusturl_free(url);
@@ -173,9 +169,9 @@ int main() {
                                 strlen("http://example.com/#"));
   assert(url); // Check we have a URL
 
-  assert(rusturl_has_fragment(url) == 1);
+  TEST_CALL(rusturl_has_fragment(url), 1);
   TEST_CALL(rusturl_set_fragment(url, "", 0), 0);
-  assert(rusturl_has_fragment(url) == 0);
+  TEST_CALL(rusturl_has_fragment(url), 0);
   TEST_CALL(rusturl_get_spec(url, &container), 0);
   container.CheckEquals("http://example.com/");
 
