@@ -33,7 +33,7 @@ typedef struct rusturl* rusturl_ptr;
 rusturl_ptr rusturl_new(const char *spec, size_t src_len);
 void rusturl_free(rusturl_ptr url);
 
-int32_t rusturl_get_part(rusturl_ptr url, uint32_t, uint32_t, void*);
+int32_t rusturl_get_substring(rusturl_ptr url, uint32_t, uint32_t, void*);
 
 int32_t rusturl_get_spec(rusturl_ptr url, void*);
 int32_t rusturl_get_scheme(rusturl_ptr url, void*);

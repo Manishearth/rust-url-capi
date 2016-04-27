@@ -123,43 +123,43 @@ int main() {
   TEST_CALL(rusturl_get_spec(url, &container), 0);
   container.CheckEquals("http://example.org:9090/else.txt?x=1#fragment");
 
-  TEST_CALL(rusturl_get_part(url, PositionBeforeScheme, PositionAfterScheme, &container), 0);
+  TEST_CALL(rusturl_get_substring(url, PositionBeforeScheme, PositionAfterScheme, &container), 0);
   container.CheckEquals("http");
 
-  TEST_CALL(rusturl_get_part(url, PositionBeforeHost, PositionAfterHost, &container), 0);
+  TEST_CALL(rusturl_get_substring(url, PositionBeforeHost, PositionAfterHost, &container), 0);
   container.CheckEquals("example.org");
 
-  TEST_CALL(rusturl_get_part(url, PositionBeforePort, PositionAfterPort, &container), 0);
+  TEST_CALL(rusturl_get_substring(url, PositionBeforePort, PositionAfterPort, &container), 0);
   container.CheckEquals("9090");
 
-  TEST_CALL(rusturl_get_part(url, PositionBeforePath, PositionAfterPath, &container), 0);
+  TEST_CALL(rusturl_get_substring(url, PositionBeforePath, PositionAfterPath, &container), 0);
   container.CheckEquals("/else.txt");
 
-  TEST_CALL(rusturl_get_part(url, PositionBeforeQuery, PositionAfterQuery, &container), 0);
+  TEST_CALL(rusturl_get_substring(url, PositionBeforeQuery, PositionAfterQuery, &container), 0);
   container.CheckEquals("x=1");
 
-  TEST_CALL(rusturl_get_part(url, PositionBeforeFragment, PositionAfterFragment, &container), 0);
+  TEST_CALL(rusturl_get_substring(url, PositionBeforeFragment, PositionAfterFragment, &container), 0);
   container.CheckEquals("fragment");
 
-  TEST_CALL(rusturl_get_part(url, PositionBeforeScheme, PositionAfterFragment, &container), 0);
+  TEST_CALL(rusturl_get_substring(url, PositionBeforeScheme, PositionAfterFragment, &container), 0);
   container.CheckEquals("http://example.org:9090/else.txt?x=1#fragment");
 
-  TEST_CALL(rusturl_get_part(url, PositionBeforeHost, PositionAfterPort, &container), 0);
+  TEST_CALL(rusturl_get_substring(url, PositionBeforeHost, PositionAfterPort, &container), 0);
   container.CheckEquals("example.org:9090");
 
   TEST_CALL(rusturl_set_username(url, "user", strlen("user")), 0);
   TEST_CALL(rusturl_set_password(url, "pass", strlen("pass")), 0);
 
-  TEST_CALL(rusturl_get_part(url, PositionBeforeScheme, PositionAfterFragment, &container), 0);
+  TEST_CALL(rusturl_get_substring(url, PositionBeforeScheme, PositionAfterFragment, &container), 0);
   container.CheckEquals("http://user:pass@example.org:9090/else.txt?x=1#fragment");
 
-  TEST_CALL(rusturl_get_part(url, PositionBeforeUsername, PositionAfterPassword, &container), 0);
+  TEST_CALL(rusturl_get_substring(url, PositionBeforeUsername, PositionAfterPassword, &container), 0);
   container.CheckEquals("user:pass");
 
-  TEST_CALL(rusturl_get_part(url, PositionBeforeUsername, PositionAfterPort, &container), 0);
+  TEST_CALL(rusturl_get_substring(url, PositionBeforeUsername, PositionAfterPort, &container), 0);
   container.CheckEquals("user:pass@example.org:9090");
 
-  TEST_CALL(rusturl_get_part(url, PositionBeforeScheme, PositionAfterPort, &container), 0);
+  TEST_CALL(rusturl_get_substring(url, PositionBeforeScheme, PositionAfterPort, &container), 0);
   container.CheckEquals("http://user:pass@example.org:9090");
 
   // Free the URL

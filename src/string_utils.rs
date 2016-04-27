@@ -1,5 +1,5 @@
 extern crate libc;
-use libc::{c_void, c_char, size_t};
+use libc::{c_void, size_t};
 
 extern crate std;
 use std::ptr;

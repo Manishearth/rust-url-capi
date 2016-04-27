@@ -8,14 +8,14 @@ authors = ["Valentin Gosu <valentin.gosu@gmail.com>"]
 opt-level = 3
 debug = true
 rpath = true
-lto = true
+#lto = true
 
 [lib]
 name = "rust_url_capi"
 crate-type = ["staticlib"]
 
 [dependencies.url]
-path = "/home/icecold/workspace/rust-url"
+path = "../rust-url"
 
 [dependencies]
-libc = "0.2"
+libc = {version = "0.2"}

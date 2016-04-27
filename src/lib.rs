@@ -1,8 +1,8 @@
 extern crate url;
-use url::{Url, WebIdl, Position};
+use url::{Url, Position};
 
 extern crate libc;
-use libc::{c_void, c_char, size_t};
+use libc::size_t;
 
 
 use std::mem;
@@ -29,7 +29,10 @@ pub unsafe extern "C" fn rusturl_new(spec: *mut libc::c_char, len: size_t) -> ru
 
   let url = match Url::parse(url_spec) {
     Ok(url) => url,
-    Err(_) => return 0 as rusturl_ptr
+    Err(e) => {
+      //println!("error: {:?} {:?}", e, url_spec);
+      return 0 as rusturl_ptr;
+    }
   };
 
   let url = Box::new(url);
@@ -46,7 +49,7 @@ pub unsafe extern "C" fn rusturl_free(urlptr: rusturl_ptr) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_part(urlptr: rusturl_ptr, from: u32, to: u32, cont: *mut libc::c_void) -> i32 {
+pub unsafe extern "C" fn rusturl_get_substring(urlptr: rusturl_ptr, from: u32, to: u32, cont: *mut libc::c_void) -> i32 {
   if urlptr.is_null() {
     return NSError::InvalidArg.error_code();
   }
@@ -61,7 +64,7 @@ pub unsafe extern "C" fn rusturl_get_spec(urlptr: rusturl_ptr, cont: *mut libc::
     return NSError::InvalidArg.error_code();
   }
   let url: &Url = mem::transmute(urlptr);
-  cont.assign(&url.to_string())
+  cont.assign(&url.as_str())
 }
 
 #[no_mangle]
@@ -232,9 +235,7 @@ pub unsafe extern "C" fn rusturl_set_host_and_port(urlptr: rusturl_ptr, host_and
     None => return Err(()).error_code() // utf-8 failed
   };
 
-  WebIdl::set_host(url, host_and_port_);
-
-  Ok(()).error_code()
+  url::quirks::set_host(url, host_and_port_).error_code()
 }
 
 #[no_mangle]
@@ -304,7 +305,7 @@ pub unsafe extern "C" fn rusturl_set_path(urlptr: rusturl_ptr, path: *mut libc::
   };
 
   url.set_path(path_);
-  Ok(()).error_code()
+  (Ok(()) as Result<(),()>) .error_code()
 }
 
 #[no_mangle]
@@ -326,7 +327,7 @@ pub unsafe extern "C" fn rusturl_set_query(urlptr: rusturl_ptr, query: *mut libc
     url.set_query(None);
   }
 
-  Ok(()).error_code()
+  (Ok(()) as Result<(),()>) .error_code()
 }
 
 #[no_mangle]
@@ -337,18 +338,19 @@ pub unsafe extern "C" fn rusturl_set_fragment(urlptr: rusturl_ptr, fragment: *mu
   let mut url: &mut Url = mem::transmute(urlptr);
   let slice = std::slice::from_raw_parts(fragment as *const libc::c_uchar, len as usize);
 
+  if len == 0 {
+    url.set_fragment(None);
+    return (Ok(()) as Result<(),()>) .error_code();
+  }
+
   let fragment_ = match str::from_utf8(slice).ok() {
     Some(p) => p,
     None => return Err(()).error_code() // utf-8 failed
   };
 
-  if fragment_.len() > 0 {
-    url.set_fragment(Some(fragment_));
-  } else {
-    url.set_fragment(None);
-  }
+  url.set_fragment(Some(fragment_));
 
-  Ok(()).error_code()
+  (Ok(()) as Result<(),()>) .error_code()
 }
 
 #[no_mangle]
@@ -366,7 +368,7 @@ pub unsafe extern "C" fn rusturl_resolve(urlptr: rusturl_ptr, resolve: *mut libc
   };
 
   match url.join(resolve_) {
-    Ok(u) => { cont.assign(&u.to_string()); return Ok(()).error_code(); },
+    Ok(u) => { cont.assign(&u.as_str()); return (Ok(()) as Result<(),()>) .error_code(); },
     Err(e) => { cont.set_size(0); return e.error_code(); }
   }
 }
