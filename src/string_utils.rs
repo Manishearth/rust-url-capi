@@ -14,7 +14,7 @@ extern "C" {
 pub trait StringContainer {
   fn set_size(&self, size_t) -> i32;
   fn get_buffer(&self) -> *mut libc::c_char;
-  fn assign(&self, content: &String) -> i32;
+  fn assign(&self, content: &str) -> i32;
 }
 
 impl StringContainer for *mut libc::c_void {
@@ -36,7 +36,7 @@ impl StringContainer for *mut libc::c_void {
       c_fn_get_buffer(*self)
     }
   }
-  fn assign(&self, content: &String) -> i32 {
+  fn assign(&self, content: &str) -> i32 {
     if (*self).is_null() {
       return NSError::InvalidArg.error_code();
     }
@@ -49,7 +49,7 @@ impl StringContainer for *mut libc::c_void {
         return NSError::Failure.error_code();
       }
 
-      ptr::copy(slice.as_ptr(), buf as *mut u8, content.len());
+      ptr::copy(slice.as_ptr(), buf as *mut u8, slice.len());
     }
 
     NSError::OK.error_code()
