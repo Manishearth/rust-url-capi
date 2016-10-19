@@ -19,3 +19,5 @@ git = "https://github.com/valenting/rust-url"
 branch = "oxidation"
 #path = "../rust-url"
 
+[dependencies]
+libc = "0.2.0"

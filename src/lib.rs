@@ -1,13 +1,8 @@
-#![feature(libc)]
-
-// warning: use of unstable library feature 'alloc': may be renamed
-#![feature(alloc)]
-
 extern crate url;
-use url::{ Url, ParseError, UrlParser, SchemeType, ParseResult};
+use url::{Url, ParseError, UrlParser, SchemeType, ParseResult};
 
 extern crate libc;
-use libc::{c_void, c_char, size_t};
+use libc::size_t;
 
 
 use std::mem;
@@ -76,7 +71,7 @@ pub unsafe extern "C" fn rusturl_new(spec: *mut libc::c_char, len: size_t) -> ru
     Err(_) => return 0 as rusturl_ptr
   };
   let url = Box::new(url);
-  std::boxed::into_raw(url) as rusturl_ptr
+  Box::into_raw(url) as rusturl_ptr
 }
 
 #[no_mangle]

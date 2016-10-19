@@ -1,5 +1,5 @@
 extern crate libc;
-use libc::{c_void, c_char, size_t};
+use libc::size_t;
 
 extern crate std;
 use std::ptr;
@@ -8,7 +8,7 @@ use error_mapping::*;
 
 extern "C" {
   fn c_fn_set_size(user: *mut libc::c_void, size: size_t) -> i32;
-  fn c_fn_get_buffer(user: *mut c_void) -> *mut libc::c_char;
+  fn c_fn_get_buffer(user: *mut libc::c_void) -> *mut libc::c_char;
 }
 
 pub trait StringContainer {
@@ -23,7 +23,7 @@ impl StringContainer for *mut libc::c_void {
       return NSError::InvalidArg.error_code();
     }
     unsafe {
-      c_fn_set_size(*self, size as u64);
+      c_fn_set_size(*self, size);
     }
 
     return NSError::OK.error_code();
@@ -43,7 +43,7 @@ impl StringContainer for *mut libc::c_void {
 
     unsafe {
       let slice = content.as_bytes();
-      c_fn_set_size(*self, slice.len() as u64);
+      c_fn_set_size(*self, slice.len());
       let buf = c_fn_get_buffer(*self);
       if buf.is_null() {
         return NSError::Failure.error_code();
